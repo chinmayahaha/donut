@@ -1,0 +1,131 @@
+
+const express = require('express');
+const jwt = require('jsonwebtoken');
+const Project = require('../models/Project');
+
+const router = express.Router();
+
+const verifyToken = (req, res, next) => {
+  const token = req.headers['authorization'];
+  if (!token) return res.status(403).send({ auth: false, message: 'No token provided.' });
+
+  jwt.verify(token, process.env.JWT_ACCESS_SECRET, (err, decoded) => {
+    if (err) return res.status(500).send({ auth: false, message: 'Failed to authenticate token.' });
+    req.userId = decoded.id;
+    next();
+  });
+};
+
+const ProjectController = {
+  getAllProjects(req, res) {
+    try {
+      const userId = req.userId;
+      Project.find({ user: userId })
+        .sort('date')
+        .exec((err, projects) => {
+          if (err) return res.status(500).send({ message: err.message });
+          res.status(200).json(projects);
+        });
+    } catch (error) {
+      res.status(500).send({ error: 'Internal Server Error' });
+    }
+  },
+
+  createProject(req, res) {
+    try {
+      const { title, description, status, tags } = req.body;
+      if (!title || !description || !status || !tags) {
+        return res.status(400).json({ message: 'Missing required fields' });
+      }
+
+      const project = new Project({
+        user: req.userId,
+        title,
+        description,
+        status,
+        tags
+      });
+
+      project.save((err, savedProject) => {
+        if (err) return res.status(500).send({ message: err.message });
+        res.status(201).json(savedProject);
+      });
+    } catch (error) {
+      res.status(500).send({ error: 'Internal Server Error' });
+    }
+  },
+
+  getSingleProject(req, res) {
+    const { id } = req.params;
+    try {
+      Project.findById(id, (err, project) => {
+        if (project && String(project.user) !== req.userId) {
+          return res.status(403).send({ message: 'Access denied' });
+        }
+        if (err || !project) {
+          return res.status(404).send({ message: 'Project not found' });
+        }
+        res.status(200).json(project);
+      });
+    } catch (error) {
+      res.status(500).send({ error: 'Internal Server Error' });
+    }
+  },
+
+  updateProject(req, res) {
+    const { id } = req.params;
+    const { title, description, status, tags } = req.body;
+    try {
+      Project.findById(id, (err, project) => {
+        if (project && String(project.user) !== req.userId) {
+          return res.status(403).send({ message: 'Access denied' });
+        }
+        if (err || !project) {
+          return res.status(404).send({ message: 'Project not found' });
+        }
+
+        project.title = title;
+        project.description = description;
+        project.status = status;
+        project.tags = tags;
+
+        project.save((err, updatedProject) => {
+          if (err) return res.status(500).send({ message: err.message });
+          res.status(200).json(updatedProject);
+        });
+      });
+    } catch (error) {
+      res.status(500).send({ error: 'Internal Server Error' });
+    }
+  },
+
+  deleteProject(req, res) {
+    const { id } = req.params;
+    try {
+      Project.findById(id, (err, project) => {
+        if (project && String(project.user) !== req.userId) {
+          return res.status(403).send({ message: 'Access denied' });
+        }
+        if (err || !project) {
+          return res.status(404).send({ message: 'Project not found' });
+        }
+
+        project.remove((err, deletedProject) => {
+          if (err) return res.status(500).send({ message: err.message });
+          res.status(204).json(null);
+        });
+      });
+    } catch (error) {
+      res.status(500).send({ error: 'Internal Server Error' });
+    }
+  }
+
+};
+
+router.get('/', verifyToken, ProjectController.getAllProjects);
+router.post('/', verifyToken, ProjectController.createProject);
+router.get('/:id', verifyToken, ProjectController.getSingleProject);
+router.put('/:id', verifyToken, ProjectController.updateProject);
+router.delete('/:id', verifyToken, ProjectController.deleteProject);
+
+module.exports = router;
