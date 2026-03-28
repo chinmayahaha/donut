@@ -1,0 +1,186 @@
+================================================================================
+TASK: Login Form Component Task
+AGENT: ui
+PRIORITY: high
+TIMESTAMP: 2026-03-28T18:13:01.120447
+================================================================================
+
+```jsx
+import React, { useState } from 'react';
+import useNavigate from 'react-router-dom';
+
+const LoginForm = ({ onSuccess, redirectPath = '/dashboard', showSignupLink = true }) => {
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState(null);
+  const [validationErrors, setValidationErrors] = useState({});
+  const navigate = useNavigate();
+
+  const validateEmail = (email) => {
+    const regex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    return regex.test(email);
+  };
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    setIsLoading(true);
+    setValidationErrors({});
+    setError(null);
+
+    if (!email) {
+      setValidationErrors(prevState => ({
+        ...prevState,
+        email: 'Email is required'
+      }));
+      setIsLoading(false);
+      return;
+    }
+
+    if (!validateEmail(email)) {
+      setValidationErrors(prevState => ({
+        ...prevState,
+        email: 'Please enter a valid email address'
+      }));
+      setIsLoading(false);
+      return;
+    }
+
+    if (password.length < 6) {
+      setValidationErrors(prevState => ({
+        ...prevState,
+        password: 'Password must be at least 6 characters'
+      }));
+      setIsLoading(false);
+      return;
+    }
+
+    try {
+      const response = await fetch('http://localhost:5000/api/auth/login', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ email, password })
+      });
+
+      if (!response.ok) {
+        switch (response.status) {
+          case 401:
+            setError('Invalid email or password');
+            break;
+          default:
+            setError('Server error. Please try again later.');
+        }
+      } else {
+        const data = await response.json();
+        localStorage.setItem('token', data.token);
+        localStorage.setItem('user', JSON.stringify(data.user));
+        onSuccess && onSuccess(data.user);
+        navigate(redirectPath);
+      }
+    } catch (error) {
+      setError('Unable to connect. Please check your connection.');
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  return (
+    <div className="min-h-screen flex items-center justify-center bg-gray-50">
+      <div
+        className="max-w-md w-full space-y-8 p-8 bg-white rounded-lg shadow-md animate-fade-in"
+        role="dialog"
+        aria-labelledby="form-title"
+      >
+        <h2 id="form-title" className="text-2xl font-bold text-center">
+          Sign in to your account
+        </h2>
+        {error && <p className="text-red-600 text-xs text-center">{error}</p>}
+        <form onSubmit={handleSubmit} className="space-y-4">
+          <div className="relative">
+            <label htmlFor="email" className="block mb-1 text-sm font-medium text-gray-700">
+              Email
+            </label>
+            <input
+              id="email"
+              type="email"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              onBlur={() => setValidationErrors(prevState => ({ ...prevState, email: null }))}
+              className={`${validationErrors.email ? 'border-red-300' : ''} border-gray-300 w-full px-3 py-2 rounded focus:border-blue-500`}
+              required
+            />
+            {validationErrors.email && (
+              <p className="text-red-600 text-xs mt-1">{validationErrors.email}</p>
+            )}
+          </div>
+          <div className="relative">
+            <label htmlFor="password" className="block mb-1 text-sm font-medium text-gray-700">
+              Password
+            </label>
+            <input
+              id="password"
+              type="password"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              onBlur={() => setValidationErrors(prevState => ({ ...prevState, password: null }))}
+              className={`${validationErrors.password ? 'border-red-300' : ''} border-gray-300 w-full px-3 py-2 rounded focus:border-blue-500`}
+              required
+            />
+            {validationErrors.password && (
+              <p className="text-red-600 text-xs mt-1">{validationErrors.password}</p>
+            )}
+          </div>
+          <button
+            type="submit"
+            disabled={isLoading}
+            className={`w-full px-4 py-2 text-center text-white bg-blue-600 hover:bg-blue-700 rounded focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 ${
+              isLoading ? 'opacity-75 cursor-not-allowed' : ''
+            }`}
+          >
+            {isLoading ? (
+              <svg
+                className="animate-spin -ml-1 mr-3 h-5 w-5 text-white"
+                xmlns="http://www.w3.org/2000/svg"
+                fill="none"
+                viewBox="0 0 24 24"
+              >
+                <circle
+                  className="opacity-25"
+                  cx="12"
+                  cy="12"
+                  r="10"
+                  stroke="currentColor"
+                  strokeWidth="4"
+                />
+                <path
+                  className="opacity-75"
+                  fill="currentColor"
+                  d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12a7.962 7.962 0 017.933-7.933A8 8 0 0120 12a7.933 7.933 0 01-2.241 5.709L16 17l-1.789-1.729a8 8 0 01-.258-1.029zM12 18V6"
+                />
+              </svg>
+            ) : (
+              'Sign in'
+            )}
+          </button>
+        </form>
+        {showSignupLink && (
+          <p className="text-center text-gray-700">
+            Don't have an account?{' '}
+            <a href="#" className="text-blue-600 hover:text-blue-500">
+              Sign up
+            </a>
+          </p>
+        )}
+      </div>
+    </div>
+  );
+};
+
+export default LoginForm;
+```
+
+================================================================================
+Expected output location: client/src/components/LoginForm.jsx
+================================================================================
