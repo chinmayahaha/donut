@@ -1,9 +1,3 @@
-// ============================================================
-//  MERN Startup — Express Server
-//  File   : index.js
-//  Place  : C:\Users\chait\donut\server\index.js
-//  Run    : node index.js  (from inside C:\Users\chait\donut\server)
-// ============================================================
 
 require("dotenv").config({ path: "../.env" }); // loads .env from project root
 const express = require("express");
@@ -41,7 +35,7 @@ app.get("/", (req, res) => {
 // ── API Routes (add as you build) ─────────────────────────────
 // app.use("/api/users",         require("./routes/users"));
  app.use("/api/auth",          require("./routes/auth"));
-// app.use("/api/projects",      require("./routes/projects"));
+ app.use("/api/projects",      require("./routes/projects"));
 // app.use("/api/subscriptions", require("./routes/subscriptions"));
 
 // ── 404 Handler ───────────────────────────────────────────────
