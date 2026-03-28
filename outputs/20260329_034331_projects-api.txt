@@ -1,0 +1,117 @@
+================================================================================
+TASK: Projects API Routes
+AGENT: backend
+PRIORITY: high
+TIMESTAMP: 2026-03-29T03:43:31.771187
+================================================================================
+
+```javascript
+const express = require('express');
+const router = express.Router();
+const jwt = require('jsonwebtoken');
+const Project = require('../models/Project');
+const { JWT_ACCESS_SECRET } = process.env;
+
+// Middleware to decode and verify JWT token
+router.use((req, res, next) => {
+  const token = req.headers['authorization']?.split(' ')[1];
+  if (!token) return res.status(403).json({ message: 'No token provided' });
+  
+  jwt.verify(token, JWT_ACCESS_SECRET, (err, decoded) => {
+    if (err) return res.status(401).json({ message: 'Failed to authenticate token' });
+    req.userId = decoded.id;
+    next();
+  });
+});
+
+// GET /api/projects - Get all projects for logged in user, sorted by date
+router.get('/', async (req, res) => {
+  try {
+    const projects = await Project.find({ userId: req.userId }).sort('date');
+    res.json(projects);
+  } catch (error) {
+    res.status(500).json({ message: 'Server error', error });
+  }
+});
+
+// POST /api/projects - Create new project
+router.post('/', async (req, res) => {
+  try {
+    const { title, description, status, tags } = req.body;
+    if (!title || !description || !status || !tags) 
+      return res.status(400).json({ message: 'All fields are required' });
+
+    const project = new Project({
+      userId: req.userId,
+      title,
+      description,
+      status,
+      tags
+    });
+
+    const savedProject = await project.save();
+    res.json(savedProject);
+  } catch (error) {
+    res.status(500).json({ message: 'Server error', error });
+  }
+});
+
+// GET /api/projects/:id - Get single project, only owner can access
+router.get('/:id', async (req, res) => {
+  try {
+    const project = await Project.findById(req.params.id);
+    if (!project) return res.status(404).json({ message: 'Project not found' });
+    if (project.userId !== req.userId) 
+      return res.status(403).json({ message: 'Access denied' });
+
+    res.json(project);
+  } catch (error) {
+    res.status(500).json({ message: 'Server error', error });
+  }
+});
+
+// PUT /api/projects/:id - Update project, only owner can update
+router.put('/:id', async (req, res) => {
+  try {
+    const { title, description, status, tags } = req.body;
+    if (!title || !description || !status || !tags) 
+      return res.status(400).json({ message: 'All fields are required' });
+
+    const project = await Project.findById(req.params.id);
+    if (!project) return res.status(404).json({ message: 'Project not found' });
+    if (project.userId !== req.userId) 
+      return res.status(403).json({ message: 'Access denied' });
+
+    project.title = title;
+    project.description = description;
+    project.status = status;
+    project.tags = tags;
+
+    const updatedProject = await project.save();
+    res.json(updatedProject);
+  } catch (error) {
+    res.status(500).json({ message: 'Server error', error });
+  }
+});
+
+// DELETE /api/projects/:id - Delete project, only owner can delete
+router.delete('/:id', async (req, res) => {
+  try {
+    const project = await Project.findById(req.params.id);
+    if (!project) return res.status(404).json({ message: 'Project not found' });
+    if (project.userId !== req.userId) 
+      return res.status(403).json({ message: 'Access denied' });
+
+    await project.deleteOne();
+    res.json({ message: 'Project deleted' });
+  } catch (error) {
+    res.status(500).json({ message: 'Server error', error });
+  }
+});
+
+module.exports = router;
+```
+
+================================================================================
+Expected output location: server/routes/projects.js
+================================================================================

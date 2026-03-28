@@ -10,6 +10,7 @@ from pathlib import Path
 from datetime import datetime
 from crewai import Agent, Task, Crew, Process
 
+
 # ============================================================================
 # CONFIGURATION
 # ============================================================================

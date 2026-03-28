@@ -1,0 +1,108 @@
+================================================================================
+TASK: Projects API Routes
+AGENT: backend
+PRIORITY: high
+TIMESTAMP: 2026-03-29T03:31:57.819307
+================================================================================
+
+```javascript
+const express = require('express');
+const router = express.Router();
+const mongoose = require('mongoose');
+const axios = require('axios');
+const Project = require('../models/Project');
+const jwt = require('jsonwebtoken');
+
+// Middleware to verify JWT token
+const authMiddleware = (req, res, next) => {
+  const token = req.headers['x-access-token'];
+
+  if (!token) return res.status(403).send({ message: 'No token provided' });
+
+  jwt.verify(token, process.env.JWT_ACCESS_SECRET, (err, decoded) => {
+    if (err) return res.status(500).send({ message: 'Failed to authenticate token.' });
+    req.userId = decoded.id;
+    next();
+  });
+};
+
+// GET /api/projects — get all projects for logged in user, sorted by date
+router.get('/api/projects', authMiddleware, async (req, res) => {
+  try {
+    const projects = await Project.find({ owner: req.userId }).sort({ date: -1 });
+    res.json(projects);
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+});
+
+// POST /api/projects — create new project, body: title, description, status, tags
+router.post('/api/projects', authMiddleware, async (req, res) => {
+  try {
+    const { title, description, status, tags } = req.body;
+    const project = new Project({
+      title,
+      description,
+      status,
+      tags,
+      owner: req.userId
+    });
+    await project.save();
+    res.status(201).json(project);
+  } catch (error) {
+    res.status(400).json({ message: error.message });
+  }
+});
+
+// GET /api/projects/:id — get single project, only owner can access
+router.get('/api/projects/:id', authMiddleware, async (req, res) => {
+  try {
+    const project = await Project.findById(req.params.id);
+    if (!project) return res.status(404).json({ message: 'Project not found' });
+    if (project.owner.toString() !== req.userId) return res.status(403).json({ message: 'Unauthorized access' });
+    res.json(project);
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+});
+
+// PUT /api/projects/:id — update project, only owner can update
+router.put('/api/projects/:id', authMiddleware, async (req, res) => {
+  try {
+    const { title, description, status, tags } = req.body;
+    const project = await Project.findById(req.params.id);
+    if (!project) return res.status(404).json({ message: 'Project not found' });
+    if (project.owner.toString() !== req.userId) return res.status(403).json({ message: 'Unauthorized access' });
+
+    project.title = title;
+    project.description = description;
+    project.status = status;
+    project.tags = tags;
+
+    await project.save();
+    res.json(project);
+  } catch (error) {
+    res.status(400).json({ message: error.message });
+  }
+});
+
+// DELETE /api/projects/:id — delete project, only owner can delete
+router.delete('/api/projects/:id', authMiddleware, async (req, res) => {
+  try {
+    const project = await Project.findById(req.params.id);
+    if (!project) return res.status(404).json({ message: 'Project not found' });
+    if (project.owner.toString() !== req.userId) return res.status(403).json({ message: 'Unauthorized access' });
+
+    await Project.remove();
+    res.json({ message: 'Project deleted' });
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+});
+
+module.exports = router;
+```
+
+================================================================================
+Expected output location: server/routes/projects.js
+================================================================================

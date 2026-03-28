@@ -1,0 +1,10 @@
+{
+  "permission": {
+    "read": {
+      "C:/Users/chait/donut/.opencode/get-shit-done/*": "allow"
+    },
+    "external_directory": {
+      "C:/Users/chait/donut/.opencode/get-shit-done/*": "allow"
+    }
+  }
+}

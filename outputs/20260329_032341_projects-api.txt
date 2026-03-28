@@ -1,0 +1,117 @@
+================================================================================
+TASK: Projects API Routes
+AGENT: backend
+PRIORITY: high
+TIMESTAMP: 2026-03-29T03:23:41.015204
+================================================================================
+
+```javascript
+const express = require('express');
+const jwt = require('jsonwebtoken');
+const Project = require('../models/Project');
+
+const router = express.Router();
+
+// Middleware to check JWT token and validate user
+function authenticateToken(req, res, next) {
+  const authHeader = req.headers['authorization'];
+  if (authHeader && authHeader.startsWith('Bearer ')) {
+    const token = authHeader.split(' ')[1];
+    jwt.verify(token, process.env.JWT_ACCESS_SECRET, (err, user) => {
+      if (err) {
+        return res.sendStatus(403);
+      }
+      req.user = user;
+      next();
+    });
+  } else {
+    res.sendStatus(401);
+  }
+}
+
+// GET /api/projects — get all projects for logged in user, sorted by date
+router.get('/', authenticateToken, async (req, res) => {
+  try {
+    const projects = await Project.find({ ownerId: req.user.id }).sort('date');
+    res.json(projects);
+  } catch (error) {
+    res.status(500).json({ error: 'Internal Server Error' });
+  }
+});
+
+// POST /api/projects — create new project, body: title, description, status, tags
+router.post('/', authenticateToken, async (req, res) => {
+  try {
+    const { title, description, status, tags } = req.body;
+    if (!title || !description || !status) {
+      return res.status(400).json({ error: 'All fields are required' });
+    }
+    const newProject = new Project({
+      ownerId: req.user.id,
+      title,
+      description,
+      status,
+      tags
+    });
+    await newProject.save();
+    res.status(201).json(newProject);
+  } catch (error) {
+    res.status(500).json({ error: 'Internal Server Error' });
+  }
+});
+
+// GET /api/projects/:id — get single project, only owner can access
+router.get('/:id', authenticateToken, async (req, res) => {
+  try {
+    const project = await Project.findById(req.params.id);
+    if (!project || project.ownerId.toString() !== req.user.id) {
+      return res.status(404).json({ error: 'Project not found' });
+    }
+    res.json(project);
+  } catch (error) {
+    res.status(500).json({ error: 'Internal Server Error' });
+  }
+});
+
+// PUT /api/projects/:id — update project, only owner can update
+router.put('/:id', authenticateToken, async (req, res) => {
+  try {
+    const { title, description, status, tags } = req.body;
+    if (!title || !description || !status) {
+      return res.status(400).json({ error: 'All fields are required' });
+    }
+    const project = await Project.findById(req.params.id);
+    if (!project || project.ownerId.toString() !== req.user.id) {
+      return res.status(404).json({ error: 'Project not found' });
+    }
+    project.title = title;
+    project.description = description;
+    project.status = status;
+    project.tags = tags;
+    await project.save();
+    res.json(project);
+  } catch (error) {
+    res.status(500).json({ error: 'Internal Server Error' });
+  }
+});
+
+// DELETE /api/projects/:id — delete project, only owner can delete
+router.delete('/:id', authenticateToken, async (req, res) => {
+  try {
+    const project = await Project.findById(req.params.id);
+    if (!project || project.ownerId.toString() !== req.user.id) {
+      return res.status(404).json({ error: 'Project not found' });
+    }
+    await project.remove();
+    res.json({ message: 'Project deleted successfully' });
+  } catch (error) {
+    res.status(500).json({ error: 'Internal Server Error' });
+  }
+});
+
+module.exports = router;
+```
+
+================================================================================
+Expected output location: server/routes/projects.js
+================================================================================
