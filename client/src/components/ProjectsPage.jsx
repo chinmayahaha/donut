@@ -7,14 +7,14 @@ const ProjectsPage = () => {
   const [projects, setProjects] = useState([]);
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(true);
-  const token = localStorage.getItem('token');
+const token = localStorage.getItem('token');
 
+useEffect(() => {
   if (!token) {
     navigate('/');
-    return null;
+    return;
   }
 
-  useEffect(() => {
     const fetchProjects = async () => {
       try {
         setLoading(true);
