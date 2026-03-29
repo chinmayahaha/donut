@@ -63,7 +63,7 @@ const SignupForm = () => {
     try {
       const response = await axios.post('https://donut-wd2v.onrender.com/api/auth/register', formData);
       
-      localStorage.setItem('token', response.data.token);
+      localStorage.setItem('token', response.data.accesstoken);
       localStorage.setItem('user', JSON.stringify(response.data.user));
       
       navigate('/dashboard');

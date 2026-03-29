@@ -54,9 +54,10 @@ const LoginForm = ({ onSuccess, redirectPath = '/dashboard', showSignupLink = tr
         return;
       }
 
-      const { token, user } = await response.json();
+   const { accessToken, user } = await response.json();
+localStorage.setItem('token', accessToken);  // ✅
 
-      localStorage.setItem('token', token);
+      localStorage.setItem('token', accesstoken);
       localStorage.setItem('user', JSON.stringify(user));
 
       if (onSuccess) onSuccess(user);
