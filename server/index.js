@@ -4,12 +4,20 @@ const express = require("express");
 const mongoose = require("mongoose");
 const cors = require("cors");
 const cookieParser = require("cookie-parser");
+const rateLimit = require('express-rate-limit');
+
+const limiter = rateLimit({
+  windowMs: 15 * 60 * 1000, // 15 minutes
+  max: 100, // max 100 requests per IP
+  message: { error: 'Too many requests, please try again later.' }
+});
 
 const app = express();
 const PORT = process.env.PORT || 5000;
 
 // ── Middleware ────────────────────────────────────────────────
 app.use(cors());                   // allow frontend requests
+app.use(limiter);
 app.use(express.json());           // parse JSON request bodies
 app.use(cookieParser());
 app.use(express.urlencoded({ extended: true }));
