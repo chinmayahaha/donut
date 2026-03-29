@@ -71,9 +71,8 @@ ProjectSchema.index({ status: 1 });                // filter by status
 ProjectSchema.index({ tags: 1 });                  // tag-based search
 
 // ── Keep memberCount in sync when members change ──────────────
-ProjectSchema.pre("save", function (next) {
+ProjectSchema.pre("save", function () {
   this.memberCount = this.members.length;
-  next();
 });
 
 module.exports = mongoose.model("Project", ProjectSchema);
