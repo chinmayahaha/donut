@@ -34,7 +34,7 @@ useEffect(() => {
 
   const handleDelete = async (projectId) => {
     try {
-      await axios.post(`${import.meta.env.VITE_API_URL}/api/projects`, formData, {
+      await axios.delete(`${import.meta.env.VITE_API_URL}/api/projects/${projectId}`, {
         headers: { Authorization: `Bearer ${token}` }
       });
       setProjects(projects.filter((project) => project._id !== projectId));
