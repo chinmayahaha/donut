@@ -18,7 +18,7 @@ const ProjectsPage = () => {
     const fetchProjects = async () => {
       try {
         setLoading(true);
-        const response = await axios.get('https://donut-wd2v.onrender.com/api/projects', {
+        const response = await axios.get('${import.meta.env.VITE_API_URL}/api/projects', {
           headers: { Authorization: `Bearer ${token}` }
         });
         setProjects(response.data);
@@ -34,7 +34,7 @@ const ProjectsPage = () => {
 
   const handleDelete = async (projectId) => {
     try {
-      await axios.delete(`https://donut-wd2v.onrender.com/api/projects/${projectId}`, {
+      await axios.delete(`${import.meta.env.VITE_API_URL}/api/projects/${projectId}`, {
         headers: { Authorization: `Bearer ${token}` }
       });
       setProjects(projects.filter((project) => project._id !== projectId));
@@ -48,7 +48,7 @@ const ProjectsPage = () => {
 
   const handleCreateProject = async () => {
     try {
-      await axios.post('https://donut-wd2v.onrender.com/api/projects', formData, {
+      await axios.post('${import.meta.env.VITE_API_URL}/api/projects', formData, {
         headers: { Authorization: `Bearer ${token}` }
       });
       setFormData({ title: '', description: '', status: 'planning' });
