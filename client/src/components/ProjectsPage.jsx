@@ -1,24 +1,29 @@
 import React, { useEffect, useState } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
+
+const API = 'https://donut-wd2v.onrender.com';
 
 const ProjectsPage = () => {
   const navigate = useNavigate();
   const [projects, setProjects] = useState([]);
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(true);
-const token = localStorage.getItem('token');
+  const [showModal, setShowModal] = useState(false);
+  const [formData, setFormData] = useState({ title: '', description: '', status: 'planning' });
 
-useEffect(() => {
-  if (!token) {
-    navigate('/');
-    return;
-  }
+  const token = localStorage.getItem('token');
+
+  useEffect(() => {
+    if (!token) {
+      navigate('/');
+      return;
+    }
 
     const fetchProjects = async () => {
       try {
         setLoading(true);
-        const response = await axios.get(`${import.meta.env.VITE_API_URL}/api/projects`, {
+        const response = await axios.get(`${API}/api/projects`, {
           headers: { Authorization: `Bearer ${token}` }
         });
         setProjects(response.data);
@@ -34,7 +39,7 @@ useEffect(() => {
 
   const handleDelete = async (projectId) => {
     try {
-      await axios.post(`${import.meta.env.VITE_API_URL}/api/projects`, formData, {
+      await axios.delete(`${API}/api/projects/${projectId}`, {
         headers: { Authorization: `Bearer ${token}` }
       });
       setProjects(projects.filter((project) => project._id !== projectId));
@@ -43,12 +48,9 @@ useEffect(() => {
     }
   };
 
-  const [showModal, setShowModal] = useState(false);
-  const [formData, setFormData] = useState({ title: '', description: '', status: 'planning' });
-
   const handleCreateProject = async () => {
     try {
-      await axios.post('${import.meta.env.VITE_API_URL}/api/projects', formData, {
+      await axios.post(`${API}/api/projects`, formData, {
         headers: { Authorization: `Bearer ${token}` }
       });
       setFormData({ title: '', description: '', status: 'planning' });
@@ -61,12 +63,8 @@ useEffect(() => {
 
   return (
     <div className="flex h-screen overflow-hidden">
-      {/* Sidebar */}
-      <aside className="bg-white shadow w-64 flex-none">
-        {/* Content will be added here */}
-      </aside>
+      <aside className="bg-white shadow w-64 flex-none"></aside>
 
-      {/* Main Content */}
       <main className="grow p-8">
         {loading && <p>Loading...</p>}
         {error && <p>Error: {error}</p>}
@@ -102,25 +100,19 @@ useEffect(() => {
           </div>
         )}
 
-        {/* Create Project Button */}
         <button onClick={() => setShowModal(true)} className="mt-4 bg-blue-500 px-4 py-2 rounded hover:bg-blue-600 text-white">
           Create Project
         </button>
 
-        {/* Modal */}
         {showModal && (
           <div className="fixed inset-0 bg-gray-500/75 flex items-center justify-center px-8 py-10">
             <div className="bg-white p-8 rounded shadow-lg w-full max-w-md">
               <h3 className="text-xl font-bold mb-4">Create Project</h3>
               <form onSubmit={(e) => e.preventDefault()}>
                 <div className="mb-4">
-                  <label htmlFor="title" className="block text-sm font-medium text-gray-700">
-                    Title
-                  </label>
+                  <label className="block text-sm font-medium text-gray-700">Title</label>
                   <input
                     type="text"
-                    id="title"
-                    name="title"
                     value={formData.title}
                     onChange={(e) => setFormData({ ...formData, title: e.target.value })}
                     required
@@ -128,12 +120,8 @@ useEffect(() => {
                   />
                 </div>
                 <div className="mb-4">
-                  <label htmlFor="description" className="block text-sm font-medium text-gray-700">
-                    Description (optional)
-                  </label>
+                  <label className="block text-sm font-medium text-gray-700">Description (optional)</label>
                   <textarea
-                    id="description"
-                    name="description"
                     value={formData.description}
                     onChange={(e) => setFormData({ ...formData, description: e.target.value })}
                     rows="4"
@@ -141,15 +129,10 @@ useEffect(() => {
                   />
                 </div>
                 <div className="mb-6">
-                  <label htmlFor="status" className="block text-sm font-medium text-gray-700">
-                    Status
-                  </label>
+                  <label className="block text-sm font-medium text-gray-700">Status</label>
                   <select
-                    id="status"
-                    name="status"
                     value={formData.status}
                     onChange={(e) => setFormData({ ...formData, status: e.target.value })}
-                    required
                     className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
                   >
                     <option value="planning">Planning</option>
