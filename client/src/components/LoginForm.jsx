@@ -1,150 +1,281 @@
-
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 
-const LoginForm = ({ onSuccess, redirectPath = '/dashboard', showSignupLink = true }) => {
+const LoginForm = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState(null);
-  const [validationErrors, setValidationErrors] = useState({});
   const navigate = useNavigate();
-
-  const validateEmail = (email) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
-
-  const handleInputChange = ({ target }) => {
-    if (target.name === 'email') setEmail(target.value);
-    else if (target.name === 'password') setPassword(target.value);
-    setValidationErrors({});
-    setError(null);
-  };
-
-  const togglePasswordVisibility = () => {
-    const input = document.getElementById('password');
-    input.type = input.type === 'password' ? 'text' : 'password';
-  };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (isLoading) return;
-
-    const validationErrors = {};
-
-    if (!email) validationErrors.email = 'Email is required';
-    if (!password) validationErrors.password = 'Password is required';
-
-    setValidationErrors(validationErrors);
-
-    if (Object.keys(validationErrors).length > 0) return;
-
     setIsLoading(true);
+    setError(null);
     try {
       const response = await fetch('https://donut-wd2v.onrender.com/api/auth/login', {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json'
-        },
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ email, password })
       });
-
+      const data = await response.json();
       if (!response.ok) {
-        const data = await response.json();
-        if (data.error === 'Invalid credentials' || data.error === 'User not found') setError('Invalid email or password');
-        else if (data.error === 'Server error') setError('Server error. Please try again later.');
+        setError(data.error || 'Invalid credentials');
         return;
       }
-
-   const { accessToken, user } = await response.json();
-localStorage.setItem('token', accessToken);  // ✅
-
-      localStorage.setItem('token', accesstoken);
-      localStorage.setItem('user', JSON.stringify(user));
-
-      if (onSuccess) onSuccess(user);
-      navigate(redirectPath);
-    } catch (error) {
-      setError('Unable to connect. Please check your connection.');
+      localStorage.setItem('token', data.accessToken);
+      localStorage.setItem('user', JSON.stringify(data.user));
+      navigate('/dashboard');
+    } catch {
+      setError('Unable to connect. Check your connection.');
     } finally {
       setIsLoading(false);
     }
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-50">
-      <div className="max-w-md w-full space-y-8 p-8 bg-white rounded-lg shadow-md">
-        <h2 className="text-2xl font-bold text-center">Login</h2>
-        {error && <p role="alert" className="text-red-600 mb-4">{error}</p>}
-        <form onSubmit={handleSubmit}>
-          <div>
-            <label htmlFor="email" className="block text-sm font-medium text-gray-700">
-              Email address
-            </label>
-            <input
-              id="email"
-              name="email"
-              type="email"
-              value={email}
-              onChange={handleInputChange}
-              required={true}
-              autoComplete="email"
-              className={`mt-1 p-2 block w-full border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm`}
-            />
-            {validationErrors.email && <p className="text-red-600 text-xs mt-1">{validationErrors.email}</p>}
+    <>
+      <style>{`
+        @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;500;700&family=Syne:wght@400;600;700;800&display=swap');
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body { background: #07070f; }
+        .login-root {
+          min-height: 100vh;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          background: #07070f;
+          font-family: 'Syne', sans-serif;
+          position: relative;
+          overflow: hidden;
+        }
+        .grid-bg {
+          position: fixed;
+          inset: 0;
+          background-image: linear-gradient(rgba(0,255,180,0.03) 1px, transparent 1px),
+            linear-gradient(90deg, rgba(0,255,180,0.03) 1px, transparent 1px);
+          background-size: 40px 40px;
+          pointer-events: none;
+        }
+        .glow-orb {
+          position: fixed;
+          width: 600px;
+          height: 600px;
+          border-radius: 50%;
+          background: radial-gradient(circle, rgba(0,255,180,0.06) 0%, transparent 70%);
+          top: -200px;
+          right: -200px;
+          pointer-events: none;
+        }
+        .glow-orb2 {
+          position: fixed;
+          width: 400px;
+          height: 400px;
+          border-radius: 50%;
+          background: radial-gradient(circle, rgba(0,120,255,0.05) 0%, transparent 70%);
+          bottom: -100px;
+          left: -100px;
+          pointer-events: none;
+        }
+        .card {
+          position: relative;
+          width: 420px;
+          background: rgba(255,255,255,0.02);
+          border: 1px solid rgba(255,255,255,0.06);
+          border-radius: 16px;
+          padding: 48px;
+          backdrop-filter: blur(20px);
+        }
+        .card::before {
+          content: '';
+          position: absolute;
+          top: 0; left: 40px; right: 40px;
+          height: 1px;
+          background: linear-gradient(90deg, transparent, rgba(0,255,180,0.4), transparent);
+        }
+        .brand {
+          display: flex;
+          align-items: center;
+          gap: 10px;
+          margin-bottom: 36px;
+        }
+        .brand-icon {
+          width: 32px;
+          height: 32px;
+          background: linear-gradient(135deg, #00ffb4, #0078ff);
+          border-radius: 8px;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          font-size: 16px;
+        }
+        .brand-name {
+          font-size: 20px;
+          font-weight: 800;
+          color: #fff;
+          letter-spacing: -0.5px;
+        }
+        h1 {
+          font-size: 28px;
+          font-weight: 700;
+          color: #fff;
+          letter-spacing: -0.5px;
+          margin-bottom: 6px;
+        }
+        .subtitle {
+          font-size: 13px;
+          color: rgba(255,255,255,0.35);
+          font-family: 'JetBrains Mono', monospace;
+          margin-bottom: 32px;
+        }
+        .error-box {
+          background: rgba(255,60,60,0.08);
+          border: 1px solid rgba(255,60,60,0.2);
+          border-radius: 8px;
+          padding: 12px 16px;
+          color: #ff6b6b;
+          font-size: 13px;
+          margin-bottom: 20px;
+          font-family: 'JetBrains Mono', monospace;
+        }
+        .field {
+          margin-bottom: 16px;
+        }
+        label {
+          display: block;
+          font-size: 11px;
+          font-weight: 600;
+          color: rgba(255,255,255,0.4);
+          letter-spacing: 1.5px;
+          text-transform: uppercase;
+          margin-bottom: 8px;
+          font-family: 'JetBrains Mono', monospace;
+        }
+        .input-wrap {
+          position: relative;
+        }
+        input {
+          width: 100%;
+          background: rgba(255,255,255,0.04);
+          border: 1px solid rgba(255,255,255,0.08);
+          border-radius: 8px;
+          padding: 12px 16px;
+          color: #fff;
+          font-size: 14px;
+          font-family: 'JetBrains Mono', monospace;
+          outline: none;
+          transition: all 0.2s;
+        }
+        input:focus {
+          border-color: rgba(0,255,180,0.4);
+          background: rgba(0,255,180,0.03);
+          box-shadow: 0 0 0 3px rgba(0,255,180,0.05);
+        }
+        input::placeholder { color: rgba(255,255,255,0.2); }
+        .eye-btn {
+          position: absolute;
+          right: 12px;
+          top: 50%;
+          transform: translateY(-50%);
+          background: none;
+          border: none;
+          color: rgba(255,255,255,0.3);
+          cursor: pointer;
+          font-size: 13px;
+          font-family: 'JetBrains Mono', monospace;
+          padding: 4px;
+          transition: color 0.2s;
+        }
+        .eye-btn:hover { color: rgba(255,255,255,0.7); }
+        .submit-btn {
+          width: 100%;
+          padding: 13px;
+          background: linear-gradient(135deg, #00ffb4, #00c896);
+          border: none;
+          border-radius: 8px;
+          color: #07070f;
+          font-size: 14px;
+          font-weight: 700;
+          font-family: 'Syne', sans-serif;
+          cursor: pointer;
+          margin-top: 24px;
+          transition: all 0.2s;
+          letter-spacing: 0.3px;
+        }
+        .submit-btn:hover:not(:disabled) {
+          transform: translateY(-1px);
+          box-shadow: 0 8px 24px rgba(0,255,180,0.25);
+        }
+        .submit-btn:disabled {
+          opacity: 0.6;
+          cursor: not-allowed;
+        }
+        .footer-link {
+          text-align: center;
+          margin-top: 24px;
+          font-size: 13px;
+          color: rgba(255,255,255,0.3);
+          font-family: 'JetBrains Mono', monospace;
+        }
+        .footer-link a {
+          color: #00ffb4;
+          text-decoration: none;
+          font-weight: 500;
+        }
+        .footer-link a:hover { text-decoration: underline; }
+      `}</style>
+      <div className="login-root">
+        <div className="grid-bg" />
+        <div className="glow-orb" />
+        <div className="glow-orb2" />
+        <div className="card">
+          <div className="brand">
+            <div className="brand-icon">🍩</div>
+            <span className="brand-name">donut</span>
           </div>
-          <div className="mt-2">
-            <label htmlFor="password" className="block text-sm font-medium text-gray-700">
-              Password
-            </label>
-            <div className="relative flex items-center mt-1 rounded-md shadow-sm focus-within:ring-blue-500 focus-within::ring-offset-2">
+          <h1>Welcome back</h1>
+          <p className="subtitle">$ auth --login</p>
+          {error && <div className="error-box">⚠ {error}</div>}
+          <form onSubmit={handleSubmit}>
+            <div className="field">
+              <label>Email</label>
               <input
-                id="password"
-                name="password"
-                type="password"
-                value={password}
-                onChange={handleInputChange}
-                required={true}
-                autoComplete="current-password"
-                className={`block w-full pr-12 border-gray-300 rounded-md shadow-sm focus:outline-none placeholder-gray-400 sm:text-sm`}
+                type="email"
+                placeholder="you@example.com"
+                value={email}
+                onChange={e => setEmail(e.target.value)}
+                required
+                autoComplete="email"
               />
-              <div className="absolute inset-y-0 right-0 pr-3 flex items-center">
-                <button type="button" onClick={togglePasswordVisibility} className="-mr-1">
-                  {/* SVG for eye icon */}
-                  {password ? 'Hide' : 'Show'}
+            </div>
+            <div className="field">
+              <label>Password</label>
+              <div className="input-wrap">
+                <input
+                  type={showPassword ? 'text' : 'password'}
+                  placeholder="••••••••"
+                  value={password}
+                  onChange={e => setPassword(e.target.value)}
+                  required
+                  style={{ paddingRight: '60px' }}
+                />
+                <button type="button" className="eye-btn" onClick={() => setShowPassword(!showPassword)}>
+                  {showPassword ? 'hide' : 'show'}
                 </button>
               </div>
             </div>
-            {validationErrors.password && <p className="text-red-600 text-xs mt-1">{validationErrors.password}</p>}
-          </div>
-          <div className="mt-4">
-            <button
-              type="submit"
-              disabled={isLoading}
-              className={`flex justify-center w-full py-2 px-4 border border-transparent rounded-md shadow-sm text-base font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500`}
-            >
-              {isLoading ? (
-                <>
-                  <svg
-                    className="animate-spin h-4 w-4 mr-3"
-                    viewBox="0 0 24 24"
-                    stroke="currentColor"
-                  >
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 8v1m4 0a6 6 0 01-1.397 5.753L10 14l-7 3m14 0a6 6 0 001.397-5.753L22 14l-7-3z" />
-                  </svg>
-                  Loading...
-                </>
-              ) : 'Login'}
+            <button type="submit" className="submit-btn" disabled={isLoading}>
+              {isLoading ? 'Authenticating...' : 'Login →'}
             </button>
-          </div>
-        </form>
-        {showSignupLink && (
-          <p className="mt-6 text-center">
-            <a href="/signup" className="font-medium text-blue-600 hover:text-blue-500">
-              Don't have an account? Sign Up
-            </a>
+          </form>
+          <p className="footer-link">
+            No account? <a href="/signup">Sign up</a>
           </p>
-        )}
+        </div>
       </div>
-    </div>
+    </>
   );
 };
 
