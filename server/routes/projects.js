@@ -49,6 +49,7 @@ router.post('/', auth, async (req, res) => {
 
     res.status(201).json(project);
   } catch (err) {
+console.error('Project create error:', err.message);
     res.status(500).json({ error: 'Failed to create project' });
   }
 });
