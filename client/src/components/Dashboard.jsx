@@ -20,23 +20,21 @@ const Dashboard = () => {
   return (
     <div className="flex h-screen bg-gray-100">
       <nav className="bg-white shadow-lg w-64">
-        <ul>
-          <li className="mb-2 px-4 hover:bg-gray-100">
-            <a href="#" className="text-gray-500 hover:text-gray-800 block px-4 py-2 text-sm">Dashboard</a>
-          </li>
-          <li className="mb-2 px-4 hover:bg-gray-100">
-            <a href="#" className="text-gray-500 hover:text-gray-800 block px-4 py-2 text-sm">Projects</a>
-          </li>
-          <li className="mb-2 px-4 hover:bg-gray-100">
-            <a href="#" className="text-gray-500 hover:text-gray-800 block px-4 py-2 text-sm">Subscriptions</a>
-          </li>
-          <li className="mb-2 px-4 hover:bg-gray-100">
-            <a href="#" className="text-gray-500 hover:text-gray-800 block px-4 py-2 text-sm">Settings</a>
-          </li>
-        </ul>
-      </nav>
-
-      <div className="flex flex-col flex-1">
+  <ul>
+    <li className="mb-2 px-4 hover:bg-gray-100">
+      <a href="/dashboard" className="text-gray-500 hover:text-gray-800 block px-4 py-2 text-sm">Dashboard</a>
+    </li>
+    <li className="mb-2 px-4 hover:bg-gray-100">
+      <a href="/projects" className="text-gray-500 hover:text-gray-800 block px-4 py-2 text-sm">Projects</a>
+    </li>
+    <li className="mb-2 px-4 hover:bg-gray-100">
+      <a href="/subscriptions" className="text-gray-500 hover:text-gray-800 block px-4 py-2 text-sm">Subscriptions</a>
+    </li>
+    <li className="mb-2 px-4 hover:bg-gray-100">
+      <a href="/settings" className="text-gray-500 hover:text-gray-800 block px-4 py-2 text-sm">Settings</a>
+    </li>
+  </ul>
+</nav>      <div className="flex flex-col flex-1">
         <header className="bg-white shadow-lg p-4 border-b">
           <h1 className="text-lg font-medium">{user ? `Welcome, ${user.name}` : 'Welcome!'}</h1>
         </header>
