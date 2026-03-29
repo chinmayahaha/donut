@@ -5,6 +5,7 @@ const mongoose = require("mongoose");
 const cors = require("cors");
 const cookieParser = require("cookie-parser");
 const rateLimit = require('express-rate-limit');
+const helmet = require('helmet');
 
 const limiter = rateLimit({
   windowMs: 15 * 60 * 1000, // 15 minutes
@@ -18,6 +19,7 @@ const PORT = process.env.PORT || 5000;
 // ── Middleware ────────────────────────────────────────────────
 app.use(cors());                   // allow frontend requests
 app.use(limiter);
+app.use(helmet());
 app.use(express.json());           // parse JSON request bodies
 app.use(cookieParser());
 app.use(express.urlencoded({ extended: true }));
